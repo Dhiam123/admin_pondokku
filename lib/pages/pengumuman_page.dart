@@ -334,7 +334,7 @@ class _PengumumanPageState extends State<PengumumanPage> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<AnnouncementType>(
-                value: p?.tipe ?? AnnouncementType.umum,
+                initialValue: p?.tipe ?? AnnouncementType.umum,
                 decoration: InputDecoration(
                   labelText: 'Tipe Pengumuman',
                   prefixIcon: const Icon(Icons.label_rounded, size: 18),

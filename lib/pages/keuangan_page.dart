@@ -556,7 +556,7 @@ class _KeuanganPageState extends State<KeuanganPage>
                             child: Switch(
                               value: b.aktif,
                               onChanged: (_) {},
-                              activeColor: AppColors.primary,
+                              activeThumbColor: AppColors.primary,
                             ),
                           ),
                           Expanded(

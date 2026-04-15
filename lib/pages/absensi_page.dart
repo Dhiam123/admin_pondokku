@@ -190,7 +190,8 @@ class _AbsensiPageState extends State<AbsensiPage> {
             children: [
               if (!isMobile)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                   decoration: const BoxDecoration(
                     color: AppColors.surfaceVariant,
                     borderRadius: BorderRadius.only(
@@ -243,11 +244,11 @@ class _AbsensiPageState extends State<AbsensiPage> {
                     ],
                   ),
                 ),
-              ..._filteredAbsensi.map((a) =>
-                  isMobile ? _buildAbsensiCard(a) : _buildAbsensiRow(a)),
+              ..._filteredAbsensi.map(
+                  (a) => isMobile ? _buildAbsensiCard(a) : _buildAbsensiRow(a)),
               if (_filteredAbsensi.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(40),
+                const Padding(
+                  padding: EdgeInsets.all(40),
                   child: EmptyState(
                     message: 'Belum ada data absensi untuk tanggal ini',
                     icon: Icons.event_busy_rounded,
@@ -368,14 +369,15 @@ class _AbsensiPageState extends State<AbsensiPage> {
     final updatedNama = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Edit Nama Absensi', style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
+        title: Text('Edit Nama Absensi',
+            style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
         content: Form(
           key: formKey,
           child: TextFormField(
             controller: controller,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Nama Siswa',
-              border: const OutlineInputBorder(),
+              border: OutlineInputBorder(),
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -388,7 +390,8 @@ class _AbsensiPageState extends State<AbsensiPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Batal', style: GoogleFonts.outfit(color: AppColors.textSecondary)),
+            child: Text('Batal',
+                style: GoogleFonts.outfit(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -396,7 +399,8 @@ class _AbsensiPageState extends State<AbsensiPage> {
                 Navigator.of(ctx).pop(controller.text.trim());
               }
             },
-            child: Text('Simpan', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+            child: Text('Simpan',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -493,7 +497,8 @@ class _AbsensiPageState extends State<AbsensiPage> {
           const SizedBox(height: 12),
           Row(
             children: [
-              StatusBadge(label: statusLabel, color: statusColor, bgColor: statusBg),
+              StatusBadge(
+                  label: statusLabel, color: statusColor, bgColor: statusBg),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(a.keterangan ?? '-',
@@ -662,8 +667,8 @@ class _FormAbsensiDialogState extends State<FormAbsensiDialog> {
                 ),
                 child: ListView.separated(
                   itemCount: _siswaByKelas.length,
-                  separatorBuilder: (c, i) => const Divider(
-                      height: 1, color: AppColors.border),
+                  separatorBuilder: (c, i) =>
+                      const Divider(height: 1, color: AppColors.border),
                   itemBuilder: (context, index) {
                     final s = _siswaByKelas[index];
                     return Padding(
@@ -674,8 +679,7 @@ class _FormAbsensiDialogState extends State<FormAbsensiDialog> {
                             flex: 2,
                             child: Text(s.nama,
                                 style: GoogleFonts.outfit(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600)),
+                                    fontSize: 13, fontWeight: FontWeight.w600)),
                           ),
                           Expanded(
                             flex: 3,
@@ -720,8 +724,7 @@ class _FormAbsensiDialogState extends State<FormAbsensiDialog> {
                           borderRadius: BorderRadius.circular(10)),
                     ),
                     child: Text('Batal',
-                        style: GoogleFonts.outfit(
-                            fontWeight: FontWeight.w600)),
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -745,8 +748,7 @@ class _FormAbsensiDialogState extends State<FormAbsensiDialog> {
                           borderRadius: BorderRadius.circular(10)),
                     ),
                     child: Text('Simpan Absensi',
-                        style: GoogleFonts.outfit(
-                            fontWeight: FontWeight.w600)),
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
                   ),
                 ),
               ],
@@ -790,7 +792,9 @@ class _FormAbsensiDialogState extends State<FormAbsensiDialog> {
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor.withOpacity(0.15) : AppColors.surfaceVariant,
+          color: isSelected
+              ? activeColor.withOpacity(0.15)
+              : AppColors.surfaceVariant,
           shape: BoxShape.circle,
           border: Border.all(
             color: isSelected ? activeColor : AppColors.border,

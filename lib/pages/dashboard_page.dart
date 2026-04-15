@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../core/theme/app_theme.dart';
@@ -112,7 +112,7 @@ class DashboardPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [AppColors.primaryDark, AppColors.primary, AppColors.primaryLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -120,7 +120,7 @@ class DashboardPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 24,
             offset: const Offset(0, 8),
           )
@@ -146,7 +146,7 @@ class DashboardPage extends StatelessWidget {
                   'Ikhtisar sistem Pondok Pesantren Darussalam hari ini.',
                   style: GoogleFonts.outfit(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -155,7 +155,7 @@ class DashboardPage extends StatelessWidget {
                   runSpacing: 12,
                   children: [
                     if (unreadPesan > 0)
-                      _quickBadge('$unreadPesan Pesan Baru', Icons.mail_rounded, Colors.white.withOpacity(0.2)),
+                      _quickBadge('$unreadPesan Pesan Baru', Icons.mail_rounded, Colors.white.withValues(alpha: 0.2)),
                     if (pendingTopup > 0)
                       _quickBadge('$pendingTopup Verifikasi Top-Up', Icons.payments_rounded, const Color(0x33FFB020)),
                     _quickBadge('3 Tagihan Jatuh Tempo', Icons.warning_amber_rounded, const Color(0x33FF3B30)),
@@ -168,7 +168,7 @@ class DashboardPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.12),
+              color: Colors.white.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.mosque_rounded, size: 56, color: Colors.white),
@@ -184,7 +184,7 @@ class DashboardPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -271,7 +271,7 @@ class DashboardPage extends StatelessWidget {
   }
 
   Widget _summaryCardRich(String label, String val, IconData icon, Color color) {
-    return _metricCard(label, val.split(' ')[0], val.split(' ').length > 1 ? val.split(' ')[1] : '', icon, color, color.withOpacity(0.12));
+    return _metricCard(label, val.split(' ')[0], val.split(' ').length > 1 ? val.split(' ')[1] : '', icon, color, color.withValues(alpha: 0.12));
   }
 
   // ────────────────────────────────────────────────────────────
@@ -295,11 +295,11 @@ class DashboardPage extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [c.withOpacity(0.05), Colors.white],
+          colors: [c.withValues(alpha: 0.05), Colors.white],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: c.withOpacity(0.2)),
+        border: Border.all(color: c.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -334,7 +334,7 @@ class DashboardPage extends StatelessWidget {
   // 4. Analitik Chart
   // ────────────────────────────────────────────────────────────
   Widget _buildRevenueChart() {
-    final spots = [FlSpot(1, 1.8), FlSpot(2, 2.1), FlSpot(3, 1.9), FlSpot(4, 2.4), FlSpot(5, 2.2), FlSpot(6, 2.8)];
+    final spots = [const FlSpot(1, 1.8), const FlSpot(2, 2.1), const FlSpot(3, 1.9), const FlSpot(4, 2.4), const FlSpot(5, 2.2), const FlSpot(6, 2.8)];
     return AdminCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,7 +375,7 @@ class DashboardPage extends StatelessWidget {
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      gradient: LinearGradient(colors: [AppColors.primary.withOpacity(0.2), AppColors.primary.withOpacity(0.01)], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+                      gradient: LinearGradient(colors: [AppColors.primary.withValues(alpha: 0.2), AppColors.primary.withValues(alpha: 0.01)], begin: Alignment.topCenter, end: Alignment.bottomCenter),
                     ),
                   ),
                 ],
@@ -510,7 +510,7 @@ class DashboardPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: n.dibaca ? null : n.warna.withOpacity(0.04),
+        color: n.dibaca ? null : n.warna.withValues(alpha: 0.04),
         border: const Border(bottom: BorderSide(color: AppColors.border)),
       ),
       child: Row(
@@ -518,7 +518,7 @@ class DashboardPage extends StatelessWidget {
         children: [
           Container(
             width: 36, height: 36,
-            decoration: BoxDecoration(color: n.warna.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(color: n.warna.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
             child: Icon(n.ikon, size: 18, color: n.warna),
           ),
           const SizedBox(width: 12),

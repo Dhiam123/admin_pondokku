@@ -254,7 +254,7 @@ class _PengaturanPageState extends State<PengaturanPage> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
           ),
         ],
       ),
@@ -337,7 +337,7 @@ class _PengaturanPageState extends State<PengaturanPage> {
                     style: GoogleFonts.outfit(
                         fontSize: 12, color: AppColors.textMuted)),
                 const SizedBox(height: 4),
-                StatusBadge(
+                const StatusBadge(
                   label: 'Super Admin',
                   color: AppColors.primary,
                   bgColor: AppColors.primarySurface,
@@ -592,7 +592,7 @@ class _PengaturanPageState extends State<PengaturanPage> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: selectedLevel,
+                initialValue: selectedLevel,
                 decoration: InputDecoration(
                   labelText: 'Level',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

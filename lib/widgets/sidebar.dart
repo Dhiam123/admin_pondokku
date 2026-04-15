@@ -58,27 +58,27 @@ class _AdminSidebarState extends State<AdminSidebar>
   late Animation<double> _fadeAnim;
 
   static final _groups = [
-    _NavGroup('', [
+    const _NavGroup('', [
       _NavItem(Icons.dashboard_rounded, 'Dashboard', SidebarItem.dashboard),
     ]),
-    _NavGroup('MASTER DATA', [
+    const _NavGroup('MASTER DATA', [
       _NavItem(Icons.people_alt_rounded, 'Data Siswa', SidebarItem.siswa),
       _NavItem(Icons.storage_rounded, 'Database', SidebarItem.database),
     ]),
-    _NavGroup('AKADEMIK', [
+    const _NavGroup('AKADEMIK', [
       _NavItem(Icons.fact_check_rounded, 'Absensi', SidebarItem.absensi),
       _NavItem(Icons.school_rounded, 'Raport & Penilaian', SidebarItem.raport),
     ]),
-    _NavGroup('KEUANGAN', [
+    const _NavGroup('KEUANGAN', [
       _NavItem(Icons.receipt_long_rounded, 'Tagihan & Cicilan', SidebarItem.tagihan),
       _NavItem(Icons.savings_rounded, 'Tabungan & Top-Up', SidebarItem.tabungan),
       _NavItem(Icons.volunteer_activism_rounded, 'Donasi & Infaq', SidebarItem.infaq),
     ]),
-    _NavGroup('KOMUNIKASI', [
+    const _NavGroup('KOMUNIKASI', [
       _NavItem(Icons.campaign_rounded, 'Pengumuman', SidebarItem.pengumuman),
       _NavItem(Icons.inbox_rounded, 'Pesan Masuk', SidebarItem.pesan),
     ]),
-    _NavGroup('SISTEM', [
+    const _NavGroup('SISTEM', [
       _NavItem(Icons.settings_rounded, 'Pengaturan', SidebarItem.pengaturan),
     ]),
   ];

@@ -316,10 +316,15 @@ class _RaportPageState extends State<RaportPage>
           const SizedBox(height: 8),
           ...r.mapelList.map((m) {
             Color gc;
-            if (m.nilaiAkhir >= 85) gc = AppColors.success;
-            else if (m.nilaiAkhir >= 75) gc = AppColors.info;
-            else if (m.nilaiAkhir >= 65) gc = AppColors.warning;
-            else gc = AppColors.error;
+            if (m.nilaiAkhir >= 85) {
+              gc = AppColors.success;
+            } else if (m.nilaiAkhir >= 75) {
+              gc = AppColors.info;
+            } else if (m.nilaiAkhir >= 65) {
+              gc = AppColors.warning;
+            } else {
+              gc = AppColors.error;
+            }
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 7),
               child: Row(
@@ -402,7 +407,7 @@ class _RaportPageState extends State<RaportPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionHeader(
+          const SectionHeader(
             title: 'Rekap Prestasi Akademik',
             subtitle: 'Semester Genap 2025/2026',
           ),

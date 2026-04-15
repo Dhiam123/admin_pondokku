@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_theme.dart';
 import '../core/data/data.dart';
@@ -168,13 +168,13 @@ class _InfaqPageState extends State<InfaqPage> {
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: c.withOpacity(0.2)),
+          border: Border.all(color: c.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
             Container(
               width: 38, height: 38,
-              decoration: BoxDecoration(color: c.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(color: c.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
               child: Icon(icon, color: c, size: 20),
             ),
             const SizedBox(width: 12),
@@ -183,7 +183,7 @@ class _InfaqPageState extends State<InfaqPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(val, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: c)),
-                  Text(label, style: GoogleFonts.outfit(fontSize: 11, color: c.withOpacity(0.8))),
+                  Text(label, style: GoogleFonts.outfit(fontSize: 11, color: c.withValues(alpha: 0.8))),
                 ],
               ),
             ),
@@ -272,7 +272,7 @@ class _InfaqPageState extends State<InfaqPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionHeader(title: 'Distribusi Infaq', subtitle: 'Komposisi jenis donasi'),
+          const SectionHeader(title: 'Distribusi Infaq', subtitle: 'Komposisi jenis donasi'),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -319,7 +319,7 @@ class _InfaqPageState extends State<InfaqPage> {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: pct,
-              backgroundColor: color.withOpacity(0.12),
+              backgroundColor: color.withValues(alpha: 0.12),
               valueColor: AlwaysStoppedAnimation<Color>(color),
               minHeight: 8,
             ),

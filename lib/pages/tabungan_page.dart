@@ -206,7 +206,7 @@ class _TabunganPageState extends State<TabunganPage>
                         color: isLow ? AppColors.warning : AppColors.primary)),
                 if (isLow) ...[
                   const SizedBox(width: 6),
-                  Tooltip(
+                  const Tooltip(
                     message: 'Saldo rendah!',
                     child: Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.warning),
                   ),
@@ -253,8 +253,8 @@ class _TabunganPageState extends State<TabunganPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(20),
+                const Padding(
+                  padding: EdgeInsets.all(20),
                   child: SectionHeader(
                     title: 'Permintaan Top-Up & Penarikan',
                     subtitle: 'Setujui atau tolak permintaan santri',

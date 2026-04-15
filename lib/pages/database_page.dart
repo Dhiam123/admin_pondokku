@@ -278,7 +278,7 @@ class _DatabasePageState extends State<DatabasePage>
               constraints: BoxConstraints(minWidth: columns.length * 160.0),
               child: DataTable(
                 columnSpacing: 20,
-                headingRowColor: MaterialStateProperty.all(AppColors.surfaceVariant),
+                headingRowColor: WidgetStateProperty.all(AppColors.surfaceVariant),
                 headingTextStyle: GoogleFonts.outfit(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_theme.dart';
 import '../core/data/data.dart';
@@ -271,7 +271,7 @@ class _AdminState extends State<Admin> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: n.dibaca ? null : n.warna.withOpacity(0.05),
+        color: n.dibaca ? null : n.warna.withValues(alpha: 0.05),
         border: const Border(bottom: BorderSide(color: AppColors.border)),
       ),
       child: Row(
@@ -281,7 +281,7 @@ class _AdminState extends State<Admin> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: n.warna.withOpacity(0.15),
+              color: n.warna.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(n.ikon, size: 18, color: n.warna),

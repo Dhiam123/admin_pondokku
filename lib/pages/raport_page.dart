@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_theme.dart';
 import '../core/data/data.dart';
@@ -107,7 +107,7 @@ class _RaportPageState extends State<RaportPage>
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: c.withOpacity(0.2)),
+          border: Border.all(color: c.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -117,7 +117,7 @@ class _RaportPageState extends State<RaportPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(val, style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: c)),
-                Text(label, style: GoogleFonts.outfit(fontSize: 11, color: c.withOpacity(0.8))),
+                Text(label, style: GoogleFonts.outfit(fontSize: 11, color: c.withValues(alpha: 0.8))),
               ],
             ),
           ],
@@ -233,7 +233,7 @@ class _RaportPageState extends State<RaportPage>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: gradeColor.withOpacity(0.15),
+                      color: gradeColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text('$gradeLabel  ${rata.toStringAsFixed(1)}',
@@ -342,7 +342,7 @@ class _RaportPageState extends State<RaportPage>
                     flex: 1,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(color: gc.withOpacity(0.12), borderRadius: BorderRadius.circular(4)),
+                      decoration: BoxDecoration(color: gc.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(4)),
                       child: Text(
                         m.nilaiAkhir >= 85 ? 'A' : m.nilaiAkhir >= 75 ? 'B' : m.nilaiAkhir >= 65 ? 'C' : 'D',
                         style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w700, color: gc),
@@ -369,7 +369,7 @@ class _RaportPageState extends State<RaportPage>
               decoration: BoxDecoration(
                 color: AppColors.primarySurface,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,7 +444,7 @@ class _RaportPageState extends State<RaportPage>
             child: Container(
               width: 28, height: 28,
               decoration: BoxDecoration(
-                color: rank == 1 ? AppColors.secondary : rank == 2 ? AppColors.textSecondary.withOpacity(0.3) : AppColors.surfaceVariant,
+                color: rank == 1 ? AppColors.secondary : rank == 2 ? AppColors.textSecondary.withValues(alpha: 0.3) : AppColors.surfaceVariant,
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -466,7 +466,7 @@ class _RaportPageState extends State<RaportPage>
             flex: 1,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(color: gc.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+              decoration: BoxDecoration(color: gc.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
               child: Text(grade, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w700, color: gc)),
             ),
           ),

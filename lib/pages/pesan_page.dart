@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_theme.dart';
 import '../core/data/data.dart';
@@ -131,7 +131,7 @@ class _PesanPageState extends State<PesanPage> {
           color: isSelected
               ? AppColors.primarySurface
               : isUnread
-                  ? AppColors.infoSurface.withOpacity(0.5)
+                  ? AppColors.infoSurface.withValues(alpha: 0.5)
                   : Colors.transparent,
           border: const Border(
               bottom: BorderSide(color: AppColors.border)),
@@ -365,7 +365,7 @@ class _PesanPageState extends State<PesanPage> {
                               Text('Admin · 5 menit lalu',
                                   style: GoogleFonts.outfit(
                                       fontSize: 10,
-                                      color: Colors.white.withOpacity(0.7))),
+                                      color: Colors.white.withValues(alpha: 0.7))),
                             ],
                           ),
                         ),

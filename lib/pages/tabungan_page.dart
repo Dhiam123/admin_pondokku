@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_theme.dart';
 import '../core/data/data.dart';
@@ -130,7 +130,7 @@ class _TabunganPageState extends State<TabunganPage>
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: c.withOpacity(0.2)),
+          border: Border.all(color: c.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -141,7 +141,7 @@ class _TabunganPageState extends State<TabunganPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(val, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700, color: c)),
-                  Text(label, style: GoogleFonts.outfit(fontSize: 11, color: c.withOpacity(0.8))),
+                  Text(label, style: GoogleFonts.outfit(fontSize: 11, color: c.withValues(alpha: 0.8))),
                 ],
               ),
             ),
@@ -292,7 +292,7 @@ class _TabunganPageState extends State<TabunganPage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       decoration: BoxDecoration(
-        color: m.status == TopupStatus.menunggu ? AppColors.warningSurface.withOpacity(0.4) : null,
+        color: m.status == TopupStatus.menunggu ? AppColors.warningSurface.withValues(alpha: 0.4) : null,
         border: const Border(bottom: BorderSide(color: AppColors.border)),
       ),
       child: Row(

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_theme.dart';
 import '../core/data/data.dart';
@@ -210,7 +210,7 @@ class _KeuanganPageState extends State<KeuanganPage>
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: c.withOpacity(0.2)),
+        border: Border.all(color: c.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -224,7 +224,7 @@ class _KeuanganPageState extends State<KeuanganPage>
                       fontSize: 20, fontWeight: FontWeight.w700, color: c)),
               Text(label,
                   style: GoogleFonts.outfit(
-                      fontSize: 11, color: c.withOpacity(0.8))),
+                      fontSize: 11, color: c.withValues(alpha: 0.8))),
             ],
           ),
         ],

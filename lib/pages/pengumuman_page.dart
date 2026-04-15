@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_theme.dart';
 import '../core/data/data.dart';
@@ -106,7 +106,7 @@ class _PengumumanPageState extends State<PengumumanPage> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
             )
           ],
@@ -119,7 +119,7 @@ class _PengumumanPageState extends State<PengumumanPage> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: tc.withOpacity(0.15),
+                    color: tc.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(_tipeIcon(p.tipe), size: 16, color: tc),
@@ -128,7 +128,7 @@ class _PengumumanPageState extends State<PengumumanPage> {
                 StatusBadge(
                   label: _tipeLabel(p.tipe),
                   color: tc,
-                  bgColor: tc.withOpacity(0.1),
+                  bgColor: tc.withValues(alpha: 0.1),
                 ),
                 const Spacer(),
                 StatusBadge(
@@ -219,7 +219,7 @@ class _PengumumanPageState extends State<PengumumanPage> {
                     StatusBadge(
                       label: _tipeLabel(p.tipe),
                       color: _tipeColor(p.tipe),
-                      bgColor: _tipeColor(p.tipe).withOpacity(0.1),
+                      bgColor: _tipeColor(p.tipe).withValues(alpha: 0.1),
                     ),
                     const SizedBox(width: 8),
                     StatusBadge(

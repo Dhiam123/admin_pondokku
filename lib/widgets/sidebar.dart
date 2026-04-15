@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_theme.dart';
 
@@ -161,7 +161,7 @@ class _AdminSidebarState extends State<AdminSidebar>
         gradient: LinearGradient(
           colors: [
             AppColors.primaryDark,
-            AppColors.primaryDark.withOpacity(0.7),
+            AppColors.primaryDark.withValues(alpha: 0.7),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -181,7 +181,7 @@ class _AdminSidebarState extends State<AdminSidebar>
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.4),
+                  color: AppColors.primary.withValues(alpha: 0.4),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 )
@@ -233,7 +233,7 @@ class _AdminSidebarState extends State<AdminSidebar>
       child: Text(
         label,
         style: GoogleFonts.outfit(
-          color: AppColors.sidebarText.withOpacity(0.5),
+          color: AppColors.sidebarText.withValues(alpha: 0.5),
           fontSize: 9.5,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.2,
@@ -254,7 +254,7 @@ class _AdminSidebarState extends State<AdminSidebar>
         boxShadow: isSelected
             ? [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 )
@@ -267,7 +267,7 @@ class _AdminSidebarState extends State<AdminSidebar>
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
           hoverColor: AppColors.sidebarHover,
-          splashColor: AppColors.primary.withOpacity(0.3),
+          splashColor: AppColors.primary.withValues(alpha: 0.3),
           onTap: () => widget.onSelected(item.page),
           child: Padding(
             padding: EdgeInsets.symmetric(
@@ -293,7 +293,7 @@ class _AdminSidebarState extends State<AdminSidebar>
                         height: 30,
                         decoration: isSelected
                             ? BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
+                                color: Colors.white.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               )
                             : null,
@@ -336,7 +336,7 @@ class _AdminSidebarState extends State<AdminSidebar>
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(color: Colors.white.withOpacity(0.08)),
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
         ),
       ),
       child: Row(
@@ -353,7 +353,7 @@ class _AdminSidebarState extends State<AdminSidebar>
               borderRadius: BorderRadius.circular(50),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 6,
                 )
               ],
@@ -393,7 +393,7 @@ class _AdminSidebarState extends State<AdminSidebar>
                 child: Container(
                   padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.08),
+                    color: Colors.white.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.logout_rounded,

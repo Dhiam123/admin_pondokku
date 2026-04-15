@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../core/theme/app_theme.dart';
@@ -793,7 +793,7 @@ class _FormAbsensiDialogState extends State<FormAbsensiDialog> {
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
           color: isSelected
-              ? activeColor.withOpacity(0.15)
+              ? activeColor.withValues(alpha: 0.15)
               : AppColors.surfaceVariant,
           shape: BoxShape.circle,
           border: Border.all(

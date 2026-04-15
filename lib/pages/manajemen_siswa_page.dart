@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_theme.dart';
-import '../core/data/data.dart';
-import '../core/models/models.dart';
+import '../core/services/student_service.dart';
 import '../widgets/common_widgets.dart';
+import 'package:dio/dio.dart';
 
 class ManajemenSiswaPage extends StatefulWidget {
   const ManajemenSiswaPage({super.key});
@@ -13,20 +13,53 @@ class ManajemenSiswaPage extends StatefulWidget {
 }
 
 class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
-  String _search = '';
-  String _filterStatus = 'Semua';
-  Siswa? _selectedSiswa;
+  final _service = StudentService();
+  final _searchCtrl = TextEditingController();
 
-  List<Siswa> get _filtered {
-    var list = DummyData.siswaList.where((s) {
-      final matchSearch = s.nama.toLowerCase().contains(_search.toLowerCase()) ||
-          s.nis.contains(_search);
-      final matchStatus = _filterStatus == 'Semua' ||
-          (_filterStatus == 'Aktif' && s.aktif) ||
-          (_filterStatus == 'Non-Aktif' && !s.aktif);
-      return matchSearch && matchStatus;
-    }).toList();
-    return list;
+  List<SiswaApi> _siswaList = [];
+  bool _isLoading = true;
+  String? _error;
+  String _filterStatus = 'Semua';
+  SiswaApi? _selectedSiswa;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      bool? isActiveFilter;
+      if (_filterStatus == 'Aktif') isActiveFilter = true;
+      if (_filterStatus == 'Non-Aktif') isActiveFilter = false;
+
+      final data = await _service.fetchAll(
+        search: _searchCtrl.text.trim(),
+        isActive: isActiveFilter,
+      );
+      if (mounted) setState(() => _siswaList = data);
+    } on DioException catch (e) {
+      if (mounted) {
+        setState(() => _error =
+            'Gagal memuat data: ${e.response?.data['message'] ?? e.message}');
+      }
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Terjadi kesalahan tidak terduga.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -34,32 +67,36 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // List panel
         Expanded(
           flex: _selectedSiswa != null ? 2 : 1,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionHeader(
-                  title: 'Manajemen Siswa',
-                  subtitle: '${DummyData.siswaList.length} siswa terdaftar',
-                  action: PrimaryButton(
-                    label: 'Tambah Siswa',
-                    icon: Icons.person_add_rounded,
-                    onPressed: () => _showAddDialog(context),
+          child: RefreshIndicator(
+            onRefresh: _loadData,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SectionHeader(
+                    title: 'Manajemen Siswa',
+                    subtitle: _isLoading
+                        ? 'Memuat data...'
+                        : '${_siswaList.length} santri terdaftar',
+                    action: PrimaryButton(
+                      label: 'Tambah Siswa',
+                      icon: Icons.person_add_rounded,
+                      onPressed: () => _showAddDialog(context),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                _buildFilters(),
-                const SizedBox(height: 16),
-                _buildTable(),
-              ],
+                  const SizedBox(height: 16),
+                  _buildFilters(),
+                  const SizedBox(height: 16),
+                  _buildContent(),
+                ],
+              ),
             ),
           ),
         ),
-        // Detail panel
         if (_selectedSiswa != null) ...[
           Container(width: 1, color: AppColors.border),
           Expanded(
@@ -69,6 +106,36 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
         ],
       ],
     );
+  }
+
+  Widget _buildContent() {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(60),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Column(
+            children: [
+              const Icon(Icons.cloud_off_rounded, size: 48, color: AppColors.error),
+              const SizedBox(height: 12),
+              Text(_error!,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(color: AppColors.error)),
+              const SizedBox(height: 16),
+              PrimaryButton(label: 'Coba Lagi', icon: Icons.refresh_rounded, onPressed: _loadData),
+            ],
+          ),
+        ),
+      );
+    }
+    return _buildTable();
   }
 
   Widget _buildFilters() {
@@ -83,13 +150,22 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
               border: Border.all(color: AppColors.border),
             ),
             child: TextField(
-              onChanged: (v) => setState(() => _search = v),
+              controller: _searchCtrl,
+              onSubmitted: (_) => _loadData(),
               decoration: InputDecoration(
-                hintText: 'Cari nama atau NIS...',
-                hintStyle: GoogleFonts.outfit(
-                    fontSize: 13, color: AppColors.textMuted),
-                prefixIcon: const Icon(Icons.search_rounded,
-                    size: 18, color: AppColors.textMuted),
+                hintText: 'Cari nama atau NIS... (Enter untuk cari)',
+                hintStyle: GoogleFonts.outfit(fontSize: 13, color: AppColors.textMuted),
+                prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.textMuted),
+                suffixIcon: _searchCtrl.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 16),
+                        color: AppColors.textMuted,
+                        onPressed: () {
+                          _searchCtrl.clear();
+                          _loadData();
+                        },
+                      )
+                    : null,
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 filled: false,
@@ -110,15 +186,20 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
   Widget _filterChip(String label) {
     final isSelected = _filterStatus == label;
     return GestureDetector(
-      onTap: () => setState(() => _filterStatus = label),
+      onTap: () {
+        setState(() {
+          _filterStatus = label;
+          _selectedSiswa = null;
+        });
+        _loadData();
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : AppColors.surface,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-              color: isSelected ? AppColors.primary : AppColors.border),
+          border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
         ),
         child: Text(
           label,
@@ -137,7 +218,6 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
       padding: EdgeInsets.zero,
       child: Column(
         children: [
-          // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
@@ -152,18 +232,18 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
                 _tableHeader('Nama Siswa', flex: 3),
                 _tableHeader('NIS', flex: 2),
                 _tableHeader('Kelas', flex: 2),
-                _tableHeader('Kamar', flex: 2),
+                _tableHeader('Asrama', flex: 2),
                 _tableHeader('Status', flex: 1),
                 _tableHeader('Aksi', flex: 1),
               ],
             ),
           ),
-          ..._filtered.map((s) => _tableRow(s)),
-          if (_filtered.isEmpty)
+          ..._siswaList.map((s) => _tableRow(s)),
+          if (_siswaList.isEmpty)
             const Padding(
               padding: EdgeInsets.all(40),
               child: EmptyState(
-                  message: 'Tidak ada siswa ditemukan',
+                  message: 'Tidak ada santri ditemukan',
                   icon: Icons.people_outline_rounded),
             ),
         ],
@@ -183,18 +263,15 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
     );
   }
 
-  Widget _tableRow(Siswa s) {
+  Widget _tableRow(SiswaApi s) {
     final isSelected = _selectedSiswa?.id == s.id;
     return GestureDetector(
-      onTap: () => setState(() =>
-          _selectedSiswa = isSelected ? null : s),
+      onTap: () => setState(() => _selectedSiswa = isSelected ? null : s),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primarySurface
-              : Colors.transparent,
+          color: isSelected ? AppColors.primarySurface : Colors.transparent,
           border: const Border(bottom: BorderSide(color: AppColors.border)),
         ),
         child: Row(
@@ -205,34 +282,22 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
                 children: [
                   CircleAvatar(
                     radius: 16,
-                    backgroundColor: s.jenisKelamin == 'L'
-                        ? AppColors.primarySurface
-                        : AppColors.secondarySurface,
+                    backgroundColor: AppColors.primarySurface,
                     child: Text(
-                      s.nama[0],
+                      s.nama.isNotEmpty ? s.nama[0] : '?',
                       style: GoogleFonts.outfit(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: s.jenisKelamin == 'L'
-                            ? AppColors.primary
-                            : AppColors.secondary,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(s.nama,
-                            style: GoogleFonts.outfit(
-                                fontSize: 13, fontWeight: FontWeight.w600),
-                            overflow: TextOverflow.ellipsis),
-                        Text(s.jenisKelamin == 'L' ? 'Laki-laki' : 'Perempuan',
-                            style: GoogleFonts.outfit(
-                                fontSize: 10, color: AppColors.textMuted)),
-                      ],
-                    ),
+                    child: Text(s.nama,
+                        style: GoogleFonts.outfit(
+                            fontSize: 13, fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis),
                   ),
                 ],
               ),
@@ -244,18 +309,17 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
                         fontSize: 12, color: AppColors.textSecondary))),
             Expanded(
                 flex: 2,
-                child: Text(s.kelas,
-                    style: GoogleFonts.outfit(fontSize: 12))),
+                child: Text(s.kelas, style: GoogleFonts.outfit(fontSize: 12))),
             Expanded(
                 flex: 2,
-                child: Text(s.kamar,
+                child: Text(s.asrama ?? '-',
                     style: GoogleFonts.outfit(fontSize: 12))),
             Expanded(
               flex: 1,
               child: StatusBadge(
-                label: s.aktif ? 'Aktif' : 'Non-Aktif',
-                color: s.aktif ? AppColors.success : AppColors.textMuted,
-                bgColor: s.aktif ? AppColors.successSurface : AppColors.surfaceVariant,
+                label: s.isActive ? 'Aktif' : 'Non-Aktif',
+                color: s.isActive ? AppColors.success : AppColors.textMuted,
+                bgColor: s.isActive ? AppColors.successSurface : AppColors.surfaceVariant,
               ),
             ),
             Expanded(
@@ -269,10 +333,13 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
                     tooltip: 'Edit',
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete_rounded, size: 16),
-                    color: AppColors.error,
-                    onPressed: () => _showDeleteDialog(context, s),
-                    tooltip: 'Hapus',
+                    icon: Icon(
+                      s.isActive ? Icons.person_off_rounded : Icons.person_rounded,
+                      size: 16,
+                    ),
+                    color: s.isActive ? AppColors.warning : AppColors.success,
+                    onPressed: () => _toggleStatus(s),
+                    tooltip: s.isActive ? 'Nonaktifkan' : 'Aktifkan',
                   ),
                 ],
               ),
@@ -283,7 +350,7 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
     );
   }
 
-  Widget _buildDetailPanel(Siswa s) {
+  Widget _buildDetailPanel(SiswaApi s) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -291,7 +358,7 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
         children: [
           Row(
             children: [
-              Text('Detail Siswa',
+              Text('Detail Santri',
                   style: GoogleFonts.outfit(
                       fontSize: 17, fontWeight: FontWeight.w700)),
               const Spacer(),
@@ -305,24 +372,23 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
           AdminCard(
             child: Column(
               children: [
-                // Avatar large
                 Container(
                   width: 72,
                   height: 72,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: s.jenisKelamin == 'L'
-                          ? [AppColors.primary, AppColors.primaryLight]
-                          : [AppColors.secondary, AppColors.secondaryLight],
+                      colors: [AppColors.primary, AppColors.primaryLight],
                     ),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
-                    child: Text(s.nama[0],
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700)),
+                    child: Text(
+                      s.nama.isNotEmpty ? s.nama[0] : '?',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -335,9 +401,9 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
                         fontSize: 12, color: AppColors.textSecondary)),
                 const SizedBox(height: 12),
                 StatusBadge(
-                  label: s.aktif ? 'Aktif' : 'Non-Aktif',
-                  color: s.aktif ? AppColors.success : AppColors.textMuted,
-                  bgColor: s.aktif ? AppColors.successSurface : AppColors.surfaceVariant,
+                  label: s.isActive ? 'Aktif' : 'Non-Aktif',
+                  color: s.isActive ? AppColors.success : AppColors.textMuted,
+                  bgColor: s.isActive ? AppColors.successSurface : AppColors.surfaceVariant,
                 ),
               ],
             ),
@@ -347,32 +413,32 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
             child: Column(
               children: [
                 _detailRow(Icons.school_rounded, 'Kelas', s.kelas),
-                _detailRow(Icons.bed_rounded, 'Kamar', s.kamar),
-                _detailRow(Icons.calendar_today_rounded, 'Tgl Masuk', s.tanggalMasuk),
-                _detailRow(Icons.location_on_rounded, 'Alamat', s.alamat),
+                _detailRow(Icons.bed_rounded, 'Asrama', s.asrama ?? '-'),
+                _detailRow(Icons.calendar_today_rounded, 'Terdaftar',
+                    s.createdAt != null
+                        ? '${s.createdAt!.day}/${s.createdAt!.month}/${s.createdAt!.year}'
+                        : '-'),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          Text('Informasi Wali',
-              style: GoogleFonts.outfit(
-                  fontSize: 14, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 8),
-          AdminCard(
-            child: Column(
-              children: [
-                _detailRow(Icons.person_rounded, 'Nama Wali', s.namaWali),
-                _detailRow(Icons.phone_rounded, 'No. HP', s.noHpWali),
-              ],
+          if (s.namaWali != null) ...[
+            const SizedBox(height: 16),
+            Text('Informasi Wali',
+                style: GoogleFonts.outfit(
+                    fontSize: 14, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            AdminCard(
+              child: _detailRow(
+                  Icons.person_rounded, 'Akun Wali', s.namaWali!),
             ),
-          ),
+          ],
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () => _showEditDialog(context, s),
               icon: const Icon(Icons.edit_rounded, size: 16),
-              label: Text('Edit Data Siswa',
+              label: Text('Edit Data Santri',
                   style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
@@ -411,114 +477,155 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
     );
   }
 
-  void _showAddDialog(BuildContext context) {
-    _showSiswaDialog(context, null);
+  Future<void> _toggleStatus(SiswaApi s) async {
+    try {
+      if (s.isActive) {
+        await _service.deactivate(s.id);
+      } else {
+        await _service.activate(s.id);
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              s.isActive ? 'Santri berhasil dinonaktifkan' : 'Santri berhasil diaktifkan'),
+          backgroundColor: s.isActive ? AppColors.warning : AppColors.success,
+        ));
+        setState(() => _selectedSiswa = null);
+        _loadData();
+      }
+    } on DioException catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Gagal mengubah status santri'),
+          backgroundColor: AppColors.error,
+        ));
+      }
+    }
   }
 
-  void _showEditDialog(BuildContext context, Siswa s) {
-    _showSiswaDialog(context, s);
-  }
+  void _showAddDialog(BuildContext context) => _showSiswaDialog(context, null);
+  void _showEditDialog(BuildContext context, SiswaApi s) => _showSiswaDialog(context, s);
 
-  void _showSiswaDialog(BuildContext context, Siswa? s) {
+  void _showSiswaDialog(BuildContext context, SiswaApi? s) {
     final namaCtrl = TextEditingController(text: s?.nama ?? '');
     final nisCtrl = TextEditingController(text: s?.nis ?? '');
     final kelasCtrl = TextEditingController(text: s?.kelas ?? '');
-    final kamarCtrl = TextEditingController(text: s?.kamar ?? '');
-    final waliCtrl = TextEditingController(text: s?.namaWali ?? '');
-    final hpCtrl = TextEditingController(text: s?.noHpWali ?? '');
+    final asramaCtrl = TextEditingController(text: s?.asrama ?? '');
+    bool isSaving = false;
 
     showDialog(
       context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
-          width: 480,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(s == null ? 'Tambah Siswa Baru' : 'Edit Data Siswa',
-                  style: GoogleFonts.outfit(
-                      fontSize: 17, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 20),
-              _dialogField('Nama Lengkap', namaCtrl,
-                  Icons.person_rounded, 'Masukkan nama siswa'),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _dialogField('NIS', nisCtrl,
-                        Icons.badge_rounded, 'Nomor Induk Santri'),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _dialogField('Kelas', kelasCtrl,
-                        Icons.school_rounded, 'Contoh: Kelas 1 Ula'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _dialogField('Kamar', kamarCtrl,
-                  Icons.bed_rounded, 'Nomor kamar'),
-              const SizedBox(height: 12),
-              _dialogField('Nama Wali', waliCtrl,
-                  Icons.family_restroom_rounded, 'Nama orang tua/wali'),
-              const SizedBox(height: 12),
-              _dialogField('No. HP Wali', hpCtrl,
-                  Icons.phone_rounded, 'Nomor WhatsApp wali'),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Container(
+            width: 480,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(s == null ? 'Tambah Santri Baru' : 'Edit Data Santri',
+                    style: GoogleFonts.outfit(fontSize: 17, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 20),
+                _dialogField('Nama Lengkap', namaCtrl, Icons.person_rounded, 'Masukkan nama santri'),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _dialogField('NIS', nisCtrl, Icons.badge_rounded, 'Nomor Induk Santri')),
+                    const SizedBox(width: 12),
+                    Expanded(child: _dialogField('Kelas', kelasCtrl, Icons.school_rounded, 'Contoh: X IPA 1')),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _dialogField('Asrama', asramaCtrl, Icons.bed_rounded, 'Nama asrama (opsional)'),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: Text('Batal', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
                       ),
-                      child: Text('Batal',
-                          style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(s == null
-                                ? 'Siswa baru berhasil ditambahkan'
-                                : 'Data siswa berhasil diperbarui'),
-                            backgroundColor: AppColors.success,
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: isSaving
+                            ? null
+                            : () async {
+                                setDialogState(() => isSaving = true);
+                                try {
+                                  if (s == null) {
+                                    await _service.create(
+                                      nis: nisCtrl.text,
+                                      nama: namaCtrl.text,
+                                      kelas: kelasCtrl.text,
+                                      asrama: asramaCtrl.text,
+                                    );
+                                  } else {
+                                    await _service.update(s.id, {
+                                      'nis': nisCtrl.text,
+                                      'nama': namaCtrl.text,
+                                      'kelas': kelasCtrl.text,
+                                      'asrama': asramaCtrl.text,
+                                    });
+                                  }
+                                   if (ctx.mounted) Navigator.pop(ctx);
+                                  if (mounted) {
+                                    // ignore: use_build_context_synchronously
+                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                      content: Text(s == null
+                                          ? 'Santri baru berhasil ditambahkan'
+                                          : 'Data santri berhasil diperbarui'),
+                                      backgroundColor: AppColors.success,
+                                    ));
+                                    setState(() => _selectedSiswa = null);
+                                    _loadData();
+                                  }
+                                } on DioException catch (e) {
+                                  setDialogState(() => isSaving = false);
+                                  if (ctx.mounted) {
+                                    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                                      content: Text(
+                                          'Gagal: ${e.response?.data['message'] ?? 'Cek koneksi'}'),
+                                      backgroundColor: AppColors.error,
+                                    ));
+                                  }
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: isSaving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : Text(s == null ? 'Tambahkan' : 'Simpan',
+                                style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
                       ),
-                      child: Text(s == null ? 'Tambahkan' : 'Simpan',
-                          style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _dialogField(
-      String label, TextEditingController ctrl, IconData icon, String hint) {
+  Widget _dialogField(String label, TextEditingController ctrl, IconData icon, String hint) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -533,52 +640,11 @@ class _ManajemenSiswaPageState extends State<ManajemenSiswaPage> {
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: Icon(icon, size: 16, color: AppColors.textMuted),
-            hintStyle:
-                GoogleFonts.outfit(fontSize: 13, color: AppColors.textMuted),
+            hintStyle: GoogleFonts.outfit(fontSize: 13, color: AppColors.textMuted),
           ),
           style: GoogleFonts.outfit(fontSize: 13),
         ),
       ],
-    );
-  }
-
-  void _showDeleteDialog(BuildContext context, Siswa s) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Hapus Data Siswa',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
-        content: Text(
-          'Apakah Anda yakin ingin menghapus data "${s.nama}"? Tindakan ini tidak dapat dibatalkan.',
-          style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Batal',
-                style: GoogleFonts.outfit(color: AppColors.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Data siswa berhasil dihapus'),
-                  backgroundColor: AppColors.error,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
-              elevation: 0,
-            ),
-            child: Text('Hapus',
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
-          ),
-        ],
-      ),
     );
   }
 }

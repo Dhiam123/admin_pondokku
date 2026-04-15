@@ -1,9 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_theme.dart';
-import '../core/data/data.dart';
-import '../core/models/models.dart';
+import '../core/services/wallet_service.dart';
+import '../core/services/student_service.dart';
 import '../widgets/common_widgets.dart';
+import 'package:dio/dio.dart';
 
 class TabunganPage extends StatefulWidget {
   const TabunganPage({super.key});
@@ -15,17 +16,48 @@ class TabunganPage extends StatefulWidget {
 class _TabunganPageState extends State<TabunganPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final _walletService = WalletService();
+  final _studentService = StudentService();
+
+  List<WalletApi> _wallets = [];
+  List<SiswaApi> _students = [];
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadData();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    if (!mounted) return;
+    setState(() { _isLoading = true; _error = null; });
+    try {
+      final results = await Future.wait([
+        _walletService.fetchAll(),
+        _studentService.fetchAll(),
+      ]);
+      if (mounted) {
+        setState(() {
+          _wallets = results[0] as List<WalletApi>;
+          _students = results[1] as List<SiswaApi>;
+        });
+      }
+    } on DioException catch (e) {
+      if (mounted) setState(() => _error = 'Gagal memuat: ${e.response?.data['message'] ?? e.message}');
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Terjadi kesalahan tidak terduga.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   String _formatCurrency(double amount) {
@@ -41,12 +73,10 @@ class _TabunganPageState extends State<TabunganPage>
 
   @override
   Widget build(BuildContext context) {
-    final totalSaldo = DummyData.tabunganSiswaList.fold(0.0, (s, t) => s + t.saldo);
-    final pendingTopup = DummyData.mutasiList.where((m) => m.status == TopupStatus.menunggu).length;
+    final totalSaldo = _wallets.fold<double>(0, (s, w) => s + w.balance);
 
     return Column(
       children: [
-        // Header
         Container(
           color: AppColors.surface,
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
@@ -54,16 +84,24 @@ class _TabunganPageState extends State<TabunganPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SectionHeader(
-                title: 'Tabungan & Top-Up',
-                subtitle: 'Kelola saldo tabungan santri dan verifikasi top-up',
+                title: 'Tabungan & Dompet',
+                subtitle: 'Kelola saldo dompet santri',
                 action: PrimaryButton(
-                  label: 'Input Manual',
+                  label: 'Buat Dompet',
                   icon: Icons.add_rounded,
-                  onPressed: () => _showInputManualDialog(context),
+                  onPressed: () => _showBuatDompetDialog(context),
                 ),
               ),
               const SizedBox(height: 16),
-              _buildSummaryRow(totalSaldo, pendingTopup),
+              Row(
+                children: [
+                  _summaryCard('Total Saldo', _formatCurrency(totalSaldo), AppColors.primary, AppColors.primarySurface, Icons.account_balance_wallet_rounded),
+                  const SizedBox(width: 12),
+                  _summaryCard('Santri Punya Dompet', '${_wallets.length}', AppColors.info, AppColors.infoSurface, Icons.people_rounded),
+                  const SizedBox(width: 12),
+                  _summaryCard('Saldo Rendah (<100rb)', '${_wallets.where((w) => w.balance < 100000).length}', AppColors.warning, AppColors.warningSurface, Icons.warning_amber_rounded),
+                ],
+              ),
               const SizedBox(height: 20),
               TabBar(
                 controller: _tabController,
@@ -73,24 +111,9 @@ class _TabunganPageState extends State<TabunganPage>
                 indicatorWeight: 3,
                 labelStyle: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600),
                 unselectedLabelStyle: GoogleFonts.outfit(fontSize: 13),
-                tabs: [
-                  const Tab(icon: Icon(Icons.savings_rounded, size: 18), text: 'Saldo Santri'),
-                  Tab(
-                    icon: Stack(
-                      children: [
-                        const Icon(Icons.pending_actions_rounded, size: 18),
-                        if (pendingTopup > 0)
-                          Positioned(
-                            right: -2, top: -2,
-                            child: Container(
-                              width: 8, height: 8,
-                              decoration: const BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
-                            ),
-                          ),
-                      ],
-                    ),
-                    text: 'Verifikasi Top-Up ($pendingTopup)',
-                  ),
+                tabs: const [
+                  Tab(icon: Icon(Icons.savings_rounded, size: 18), text: 'Saldo Santri'),
+                  Tab(icon: Icon(Icons.info_outline_rounded, size: 18), text: 'Santri Tanpa Dompet'),
                 ],
               ),
             ],
@@ -98,28 +121,34 @@ class _TabunganPageState extends State<TabunganPage>
         ),
         const Divider(height: 1, color: AppColors.border),
         Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildSaldoSantri(),
-              _buildVerifikasiTopup(),
-            ],
-          ),
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
+                  ? _buildError()
+                  : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildSaldoSantri(),
+                        _buildSantriTanpaDompet(),
+                      ],
+                    ),
         ),
       ],
     );
   }
 
-  Widget _buildSummaryRow(double totalSaldo, int pending) {
-    return Row(
-      children: [
-        _summaryCard('Total Saldo Tabungan', _formatCurrency(totalSaldo), AppColors.primary, AppColors.primarySurface, Icons.account_balance_wallet_rounded),
-        const SizedBox(width: 12),
-        _summaryCard('Santri Menabung', '${DummyData.tabunganSiswaList.length}', AppColors.info, AppColors.infoSurface, Icons.people_rounded),
-        const SizedBox(width: 12),
-        _summaryCard('Menunggu Verifikasi', '$pending', pending > 0 ? AppColors.warning : AppColors.success,
-            pending > 0 ? AppColors.warningSurface : AppColors.successSurface, Icons.pending_rounded),
-      ],
+  Widget _buildError() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.cloud_off_rounded, size: 48, color: AppColors.error),
+          const SizedBox(height: 12),
+          Text(_error!, style: GoogleFonts.outfit(color: AppColors.error)),
+          const SizedBox(height: 16),
+          PrimaryButton(label: 'Coba Lagi', icon: Icons.refresh_rounded, onPressed: _loadData),
+        ],
+      ),
     );
   }
 
@@ -151,24 +180,32 @@ class _TabunganPageState extends State<TabunganPage>
     );
   }
 
-  // ─── Tab 1: Saldo Santri ───
   Widget _buildSaldoSantri() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: AdminCard(
-        padding: EdgeInsets.zero,
-        child: Column(
-          children: [
-            _tableHeader(['Santri', 'Kelas', 'Saldo', 'Terakhir Diperbarui', 'Aksi'], [3, 2, 2, 2, 2]),
-            ...DummyData.tabunganSiswaList.map((t) => _saldoRow(t)),
-          ],
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(24),
+        child: AdminCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              _tableHeader(['Santri', 'Kelas', 'Saldo', 'Terakhir Diperbarui'], [3, 2, 2, 3]),
+              ..._wallets.map((w) => _saldoRow(w)),
+              if (_wallets.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(40),
+                  child: EmptyState(message: 'Belum ada dompet terdaftar', icon: Icons.account_balance_wallet_outlined),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _saldoRow(TabunganSiswa t) {
-    final isLow = t.saldo < 100000;
+  Widget _saldoRow(WalletApi w) {
+    final isLow = w.balance < 100000;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       decoration: BoxDecoration(
@@ -184,174 +221,104 @@ class _TabunganPageState extends State<TabunganPage>
                 CircleAvatar(
                   radius: 16,
                   backgroundColor: AppColors.primarySurface,
-                  child: Text(t.siswaNama[0],
+                  child: Text(w.studentNama.isNotEmpty ? w.studentNama[0] : '?',
                       style: GoogleFonts.outfit(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 12)),
                 ),
                 const SizedBox(width: 10),
-                Expanded(
-                  child: Text(t.siswaNama,
-                      style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500)),
-                ),
+                Expanded(child: Text(w.studentNama, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
               ],
             ),
           ),
-          Expanded(flex: 2, child: Text(t.kelas, style: GoogleFonts.outfit(fontSize: 12))),
+          Expanded(flex: 2, child: Text(w.studentKelas, style: GoogleFonts.outfit(fontSize: 12))),
           Expanded(
             flex: 2,
             child: Row(
               children: [
-                Text(_formatCurrency(t.saldo),
-                    style: GoogleFonts.outfit(
-                        fontSize: 13, fontWeight: FontWeight.w700,
-                        color: isLow ? AppColors.warning : AppColors.primary)),
+                Text(_formatCurrency(w.balance),
+                    style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w700, color: isLow ? AppColors.warning : AppColors.primary)),
                 if (isLow) ...[
                   const SizedBox(width: 6),
-                  const Tooltip(
-                    message: 'Saldo rendah!',
-                    child: Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.warning),
-                  ),
+                  const Tooltip(message: 'Saldo rendah!', child: Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.warning)),
                 ],
               ],
             ),
           ),
           Expanded(
-            flex: 2,
-            child: Text(t.lastUpdate,
-                style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textSecondary)),
-          ),
-          Expanded(
-            flex: 2,
-            child: Row(
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () => _showMutasiDialog(context, t),
-                  icon: const Icon(Icons.history_rounded, size: 14),
-                  label: Text('Mutasi', style: GoogleFonts.outfit(fontSize: 11)),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    minimumSize: Size.zero,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─── Tab 2: Verifikasi Top-Up ───
-  Widget _buildVerifikasiTopup() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          AdminCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: SectionHeader(
-                    title: 'Permintaan Top-Up & Penarikan',
-                    subtitle: 'Setujui atau tolak permintaan santri',
-                  ),
-                ),
-                const Divider(height: 1, color: AppColors.border),
-                _tableHeader(['Santri', 'Tipe', 'Jumlah', 'Tanggal', 'Keterangan', 'Status', 'Aksi'],
-                    [2, 1, 2, 2, 3, 2, 2]),
-                ...DummyData.mutasiList.map((m) => _mutasiRow(m)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _mutasiRow(MutasiTabungan m) {
-    Color sc, sbg;
-    String sl;
-    switch (m.status) {
-      case TopupStatus.menunggu:
-        sc = AppColors.warning; sbg = AppColors.warningSurface; sl = 'Menunggu';
-        break;
-      case TopupStatus.disetujui:
-        sc = AppColors.success; sbg = AppColors.successSurface; sl = 'Disetujui';
-        break;
-      case TopupStatus.ditolak:
-        sc = AppColors.error; sbg = AppColors.errorSurface; sl = 'Ditolak';
-        break;
-    }
-
-    final isTopup = m.tipe == 'topup';
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-      decoration: BoxDecoration(
-        color: m.status == TopupStatus.menunggu ? AppColors.warningSurface.withValues(alpha: 0.4) : null,
-        border: const Border(bottom: BorderSide(color: AppColors.border)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Text(m.siswaNama, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500)),
-          ),
-          Expanded(
-            flex: 1,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: isTopup ? AppColors.successSurface : AppColors.infoSurface,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(isTopup ? '↑ Top-Up' : '↓ Tarik',
-                  style: GoogleFonts.outfit(
-                      fontSize: 11, fontWeight: FontWeight.w600,
-                      color: isTopup ? AppColors.success : AppColors.info)),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              _formatCurrency(m.jumlah),
-              style: GoogleFonts.outfit(
-                  fontSize: 13, fontWeight: FontWeight.w700,
-                  color: isTopup ? AppColors.success : AppColors.info),
-            ),
-          ),
-          Expanded(flex: 2, child: Text(m.tanggal, style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textSecondary))),
-          Expanded(
             flex: 3,
-            child: Text(m.keterangan ?? '-',
-                style: GoogleFonts.outfit(fontSize: 12),
-                maxLines: 1, overflow: TextOverflow.ellipsis),
-          ),
-          Expanded(flex: 2, child: StatusBadge(label: sl, color: sc, bgColor: sbg)),
-          Expanded(
-            flex: 2,
-            child: m.status == TopupStatus.menunggu
-                ? Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20),
-                        onPressed: () => _showVerifikasiDialog(context, m, true),
-                        tooltip: 'Setujui',
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.cancel_rounded, color: AppColors.error, size: 20),
-                        onPressed: () => _showVerifikasiDialog(context, m, false),
-                        tooltip: 'Tolak',
-                      ),
-                    ],
-                  )
-                : const Icon(Icons.remove, color: AppColors.textMuted, size: 16),
+            child: Text(
+              w.updatedAt != null ? '${w.updatedAt!.day}/${w.updatedAt!.month}/${w.updatedAt!.year}' : '-',
+              style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textSecondary),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSantriTanpaDompet() {
+    final walletStudentIds = _wallets.map((w) => w.studentId).toSet();
+    final tanpaDompet = _students.where((s) => !walletStudentIds.contains(s.id) && s.isActive).toList();
+
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(24),
+        child: AdminCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: SectionHeader(
+                  title: 'Santri Belum Punya Dompet',
+                  subtitle: '${tanpaDompet.length} santri aktif belum memiliki dompet',
+                ),
+              ),
+              const Divider(height: 1, color: AppColors.border),
+              _tableHeader(['Santri', 'NIS', 'Kelas', 'Aksi'], [3, 2, 2, 1]),
+              ...tanpaDompet.map((s) => Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                    decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))),
+                    child: Row(
+                      children: [
+                        Expanded(flex: 3, child: Text(s.nama, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
+                        Expanded(flex: 2, child: Text(s.nis, style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textSecondary))),
+                        Expanded(flex: 2, child: Text(s.kelas, style: GoogleFonts.outfit(fontSize: 12))),
+                        Expanded(
+                          flex: 1,
+                          child: IconButton(
+                            icon: const Icon(Icons.add_circle_rounded, color: AppColors.primary, size: 20),
+                            tooltip: 'Buat dompet',
+                            onPressed: () async {
+                              try {
+                                await _walletService.create(s.id);
+                                if (mounted) {
+                                  // ignore: use_build_context_synchronously
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Dompet untuk ${s.nama} berhasil dibuat'), backgroundColor: AppColors.success));
+                                  _loadData();
+                                }
+                              } on DioException catch (e) {
+                                if (mounted) {
+                                  // ignore: use_build_context_synchronously
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal: ${e.response?.data['message'] ?? 'Error'}'), backgroundColor: AppColors.error));
+                                }
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+              if (tanpaDompet.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(40),
+                  child: EmptyState(message: 'Semua santri aktif sudah punya dompet!', icon: Icons.celebration_rounded),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -372,178 +339,57 @@ class _TabunganPageState extends State<TabunganPage>
     );
   }
 
-  void _showMutasiDialog(BuildContext context, TabunganSiswa t) {
+  void _showBuatDompetDialog(BuildContext context) {
+    String? selectedStudentId;
+    bool isSaving = false;
+
+    final walletStudentIds = _wallets.map((w) => w.studentId).toSet();
+    final eligible = _students.where((s) => !walletStudentIds.contains(s.id) && s.isActive).toList();
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Riwayat Mutasi – ${t.siswaNama}', style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 15)),
-        content: SizedBox(
-          width: 460,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                margin: const EdgeInsets.only(bottom: 14),
-                decoration: BoxDecoration(
-                  color: AppColors.primarySurface,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Saldo Saat Ini', style: GoogleFonts.outfit(fontSize: 12)),
-                    Text(_formatCurrency(t.saldo),
-                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.primary)),
-                  ],
-                ),
-              ),
-              ...DummyData.mutasiList
-                  .where((m) => m.siswaId == t.siswaId)
-                  .map((m) => _mutasiHistoryItem(m)),
-            ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDs) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('Buat Dompet Baru', style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
+          content: SizedBox(
+            width: 400,
+            child: eligible.isEmpty
+                ? Text('Semua santri aktif sudah memiliki dompet!', style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textSecondary))
+                : DropdownButtonFormField<String>(
+                    decoration: InputDecoration(labelText: 'Pilih Santri', labelStyle: GoogleFonts.outfit(fontSize: 13)),
+                    items: eligible.map((s) => DropdownMenuItem(value: s.id.toString(), child: Text('${s.nama} (${s.kelas})', style: GoogleFonts.outfit(fontSize: 13)))).toList(),
+                    onChanged: (v) => selectedStudentId = v,
+                  ),
           ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+            if (eligible.isNotEmpty)
+              ElevatedButton(
+                onPressed: isSaving || selectedStudentId == null
+                    ? null
+                    : () async {
+                        setDs(() => isSaving = true);
+                        try {
+                          await _walletService.create(int.parse(selectedStudentId!));
+                          if (ctx.mounted) Navigator.pop(ctx);
+                          if (mounted) {
+                            // ignore: use_build_context_synchronously
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Dompet berhasil dibuat'), backgroundColor: AppColors.success));
+                            _loadData();
+                          }
+                        } on DioException catch (e) {
+                          setDs(() => isSaving = false);
+                          if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Gagal: ${e.response?.data['message'] ?? 'Error'}'), backgroundColor: AppColors.error));
+                        }
+                      },
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, elevation: 0),
+                child: isSaving
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : Text('Buat', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+              ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Tutup')),
-        ],
-      ),
-    );
-  }
-
-  Widget _mutasiHistoryItem(MutasiTabungan m) {
-    final isTopup = m.tipe == 'topup';
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(
-              color: isTopup ? AppColors.successSurface : AppColors.infoSurface,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              isTopup ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
-              color: isTopup ? AppColors.success : AppColors.info, size: 18,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(isTopup ? 'Top-Up Saldo' : 'Penarikan Saldo',
-                    style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600)),
-                Text(m.keterangan ?? '-', style: GoogleFonts.outfit(fontSize: 11, color: AppColors.textSecondary)),
-                Text(m.tanggal, style: GoogleFonts.outfit(fontSize: 10, color: AppColors.textMuted)),
-              ],
-            ),
-          ),
-          Text(
-            '${isTopup ? '+' : '-'} ${_formatCurrency(m.jumlah)}',
-            style: GoogleFonts.outfit(
-                fontSize: 13, fontWeight: FontWeight.w700,
-                color: isTopup ? AppColors.success : AppColors.info),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showVerifikasiDialog(BuildContext context, MutasiTabungan m, bool approve) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(approve ? '✅ Setujui Top-Up' : '❌ Tolak Top-Up',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
-        content: Text(
-          approve
-              ? 'Setujui ${m.tipe} sebesar ${_formatCurrency(m.jumlah)} dari ${m.siswaNama}?'
-              : 'Tolak permintaan ${m.tipe} dari ${m.siswaNama}? Berikan alasan penolakan.',
-          style: GoogleFonts.outfit(fontSize: 13),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(approve ? 'Top-Up berhasil disetujui!' : 'Top-Up ditolak.'),
-                  backgroundColor: approve ? AppColors.success : AppColors.error,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: approve ? AppColors.success : AppColors.error,
-              foregroundColor: Colors.white, elevation: 0,
-            ),
-            child: Text(approve ? 'Setujui' : 'Tolak', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showInputManualDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Input Mutasi Manual', style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
-        content: SizedBox(
-          width: 400,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: 'Santri', labelStyle: GoogleFonts.outfit(fontSize: 13)),
-                items: DummyData.siswaList.map((s) => DropdownMenuItem(value: s.id, child: Text(s.nama))).toList(),
-                onChanged: (_) {},
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: 'Tipe', labelStyle: GoogleFonts.outfit(fontSize: 13)),
-                items: ['Top-Up', 'Penarikan'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-                onChanged: (_) {},
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Jumlah',
-                  prefixText: 'Rp ',
-                  labelStyle: GoogleFonts.outfit(fontSize: 13),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                decoration: InputDecoration(labelText: 'Keterangan', labelStyle: GoogleFonts.outfit(fontSize: 13)),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Mutasi berhasil dicatat'), backgroundColor: AppColors.success),
-              );
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, elevation: 0),
-            child: Text('Simpan', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
-          ),
-        ],
       ),
     );
   }

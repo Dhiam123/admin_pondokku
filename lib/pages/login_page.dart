@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_theme.dart';
+import '../core/network/api_service.dart';
+import 'package:dio/dio.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,6 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _showPassword = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -22,9 +25,53 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _submitLogin() {
+  Future<void> _submitLogin() async {
     if (_formKey.currentState?.validate() ?? false) {
-      Navigator.of(context).pushReplacementNamed('/admin');
+      setState(() => _isLoading = true);
+      try {
+        final email = _usernameController.text.trim();
+        final password = _passwordController.text;
+
+        final response = await ApiService().dio.post(
+          '/auth/login',
+          data: {
+            'username': email,
+            'password': password,
+          },
+        );
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final token = response.data['access_token'];
+          if (token != null) {
+            await ApiService().secureStorage.write(key: 'access_token', value: token);
+          }
+          if (mounted) {
+            Navigator.of(context).pushReplacementNamed('/admin');
+          }
+        }
+      } on DioException catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Login gagal, periksa email dan password'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Terjadi kesalahan. Silakan coba lagi.'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
     }
   }
 
@@ -114,15 +161,21 @@ class _LoginPageState extends State<LoginPage> {
                               width: double.infinity,
                               height: 48,
                               child: ElevatedButton(
-                                onPressed: _submitLogin,
+                                onPressed: _isLoading ? null : _submitLogin,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 ),
-                                child: Text(
-                                  'Masuk',
-                                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700),
-                                ),
+                                child: _isLoading 
+                                  ? const SizedBox(
+                                      width: 20, 
+                                      height: 20, 
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
+                                    )
+                                  : Text(
+                                      'Masuk',
+                                      style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700),
+                                    ),
                               ),
                             ),
                           ],

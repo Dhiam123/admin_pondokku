@@ -48,10 +48,14 @@ class _DatabasePageState extends State<DatabasePage>
                 spacing: 16,
                 runSpacing: 16,
                 children: [
-                  _summaryCard('Siswa', DummyData.siswaList.length, Icons.school),
-                  _summaryCard('Guru', DummyData.guruList.length, Icons.person_rounded),
-                  _summaryCard('Absensi', DummyData.absensiList.length, Icons.fact_check_rounded),
-                  _summaryCard('Nilai', DummyData.nilaiList.length, Icons.menu_book_rounded),
+                  _summaryCard(
+                      'Siswa', DummyData.siswaList.length, Icons.school),
+                  _summaryCard(
+                      'Guru', DummyData.guruList.length, Icons.person_rounded),
+                  _summaryCard('Absensi', DummyData.absensiList.length,
+                      Icons.fact_check_rounded),
+                  _summaryCard('Nilai', DummyData.nilaiList.length,
+                      Icons.menu_book_rounded),
                 ],
               ),
               const SizedBox(height: 24),
@@ -104,12 +108,14 @@ class _DatabasePageState extends State<DatabasePage>
   Widget _buildSiswaTable({required bool isMobile}) {
     return _buildTable(
       columns: ['Nama', 'NIS', 'Kelas', 'Wali'],
-      rows: DummyData.siswaList.map((s) => [
-            s.nama,
-            s.nis,
-            s.kelas,
-            s.namaWali,
-          ]).toList(),
+      rows: DummyData.siswaList
+          .map((s) => [
+                s.nama,
+                s.nis,
+                s.kelas,
+                s.namaWali,
+              ])
+          .toList(),
       isMobile: isMobile,
     );
   }
@@ -117,12 +123,14 @@ class _DatabasePageState extends State<DatabasePage>
   Widget _buildGuruTable({required bool isMobile}) {
     return _buildTable(
       columns: ['Nama', 'Mapel', 'Email', 'Status'],
-      rows: DummyData.guruList.map((g) => [
-            g.nama,
-            g.mataPelajaran,
-            g.email,
-            g.aktif ? 'Aktif' : 'Tidak aktif',
-          ]).toList(),
+      rows: DummyData.guruList
+          .map((g) => [
+                g.nama,
+                g.mataPelajaran,
+                g.email,
+                g.aktif ? 'Aktif' : 'Tidak aktif',
+              ])
+          .toList(),
       isMobile: isMobile,
     );
   }
@@ -130,12 +138,14 @@ class _DatabasePageState extends State<DatabasePage>
   Widget _buildAbsensiTable({required bool isMobile}) {
     return _buildTable(
       columns: ['Nama', 'Kelas', 'Status', 'Keterangan'],
-      rows: DummyData.absensiList.map((a) => [
-            a.siswaNama,
-            a.kelas,
-            _absensiLabel(a.status),
-            a.keterangan ?? '-',
-          ]).toList(),
+      rows: DummyData.absensiList
+          .map((a) => [
+                a.siswaNama,
+                a.kelas,
+                _absensiLabel(a.status),
+                a.keterangan ?? '-',
+              ])
+          .toList(),
       isMobile: isMobile,
     );
   }
@@ -143,12 +153,14 @@ class _DatabasePageState extends State<DatabasePage>
   Widget _buildNilaiTable({required bool isMobile}) {
     return _buildTable(
       columns: ['Nama', 'Mapel', 'Nilai', 'Semester'],
-      rows: DummyData.nilaiList.map((n) => [
-            n.siswaNama,
-            n.mataPelajaran,
-            n.nilai.toString(),
-            n.semester,
-          ]).toList(),
+      rows: DummyData.nilaiList
+          .map((n) => [
+                n.siswaNama,
+                n.mataPelajaran,
+                n.nilai.toString(),
+                n.semester,
+              ])
+          .toList(),
       isMobile: isMobile,
     );
   }
@@ -278,7 +290,8 @@ class _DatabasePageState extends State<DatabasePage>
               constraints: BoxConstraints(minWidth: columns.length * 160.0),
               child: DataTable(
                 columnSpacing: 20,
-                headingRowColor: WidgetStateProperty.all(AppColors.surfaceVariant),
+                headingRowColor:
+                    WidgetStateProperty.all(AppColors.surfaceVariant),
                 headingTextStyle: GoogleFonts.outfit(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,

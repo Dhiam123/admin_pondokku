@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../core/theme/app_theme.dart';
@@ -15,12 +15,22 @@ class DashboardPage extends StatelessWidget {
     final totalSiswa = DummyData.siswaList.length;
     final totalGuru = DummyData.guruList.length;
     final absenHariIni = DummyData.absensiList.length;
-    final tagihanLunas = DummyData.tagihanList.where((t) => t.status == PaymentStatus.lunas).length;
-    final tagihanBelum = DummyData.tagihanList.where((t) => t.status != PaymentStatus.lunas).length;
-    final pendapatanBulanIni = DummyData.tagihanList.where((t) => t.status == PaymentStatus.lunas).fold(0.0, (sum, t) => sum + t.jumlah);
-    
-    final pesanBelumDibaca = DummyData.pesanList.where((m) => m.status == MessageStatus.unread).length;
-    final topupMenunggu = DummyData.mutasiList.where((m) => m.status == TopupStatus.menunggu).length;
+    final tagihanLunas = DummyData.tagihanList
+        .where((t) => t.status == PaymentStatus.lunas)
+        .length;
+    final tagihanBelum = DummyData.tagihanList
+        .where((t) => t.status != PaymentStatus.lunas)
+        .length;
+    final pendapatanBulanIni = DummyData.tagihanList
+        .where((t) => t.status == PaymentStatus.lunas)
+        .fold(0.0, (sum, t) => sum + t.jumlah);
+
+    final pesanBelumDibaca = DummyData.pesanList
+        .where((m) => m.status == MessageStatus.unread)
+        .length;
+    final topupMenunggu = DummyData.mutasiList
+        .where((m) => m.status == TopupStatus.menunggu)
+        .length;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -40,16 +50,24 @@ class DashboardPage extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // 2. Metrik Utama (Akademik & SDM)
-                  _buildSectionLabel('Indikator Akademik & SDM', Icons.school_rounded),
-                  _buildPrimaryMetrics(totalSiswa, totalGuru, absenHariIni, isMedium),
-                  
+                  _buildSectionLabel(
+                      'Indikator Akademik & SDM', Icons.school_rounded),
+                  _buildPrimaryMetrics(
+                      totalSiswa, totalGuru, absenHariIni, isMedium),
+
                   const SizedBox(height: 32),
 
                   // 3. Keuangan & Tagihan Overview
-                  _buildSectionLabel('Ringkasan Keuangan & Tagihan Bulan Ini', Icons.account_balance_wallet_rounded),
-                  _buildFinanceOverview(DummyData.saldoKeseluruhan, DummyData.saldoInfaq, DummyData.saldoOperasional, isMedium),
+                  _buildSectionLabel('Ringkasan Keuangan & Tagihan Bulan Ini',
+                      Icons.account_balance_wallet_rounded),
+                  _buildFinanceOverview(
+                      DummyData.saldoKeseluruhan,
+                      DummyData.saldoInfaq,
+                      DummyData.saldoOperasional,
+                      isMedium),
                   const SizedBox(height: 16),
-                  _buildStatCards(tagihanLunas, tagihanBelum, pendapatanBulanIni, isMedium),
+                  _buildStatCards(
+                      tagihanLunas, tagihanBelum, pendapatanBulanIni, isMedium),
 
                   const SizedBox(height: 32),
 
@@ -61,7 +79,10 @@ class DashboardPage extends StatelessWidget {
                         children: [
                           Expanded(flex: 3, child: _buildRevenueChart()),
                           const SizedBox(width: 20),
-                          Expanded(flex: 2, child: _buildPaymentStatusChart(tagihanLunas, tagihanBelum)),
+                          Expanded(
+                              flex: 2,
+                              child: _buildPaymentStatusChart(
+                                  tagihanLunas, tagihanBelum)),
                         ],
                       ),
                     )
@@ -73,7 +94,7 @@ class DashboardPage extends StatelessWidget {
                         _buildPaymentStatusChart(tagihanLunas, tagihanBelum),
                       ],
                     ),
-                  
+
                   const SizedBox(height: 32),
 
                   // 5. Tabel Histori & Notifikasi Terkini
@@ -113,14 +134,18 @@ class DashboardPage extends StatelessWidget {
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppColors.primaryDark, AppColors.primary, AppColors.primaryLight],
+          colors: [
+            AppColors.primaryDark,
+            AppColors.primary,
+            AppColors.primaryLight
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
+            color: AppColors.primary.withOpacity(0.3),
             blurRadius: 24,
             offset: const Offset(0, 8),
           )
@@ -146,7 +171,7 @@ class DashboardPage extends StatelessWidget {
                   'Ikhtisar sistem Pondok Pesantren Darussalam hari ini.',
                   style: GoogleFonts.outfit(
                     fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.85),
+                    color: Colors.white.withOpacity(0.85),
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -155,10 +180,13 @@ class DashboardPage extends StatelessWidget {
                   runSpacing: 12,
                   children: [
                     if (unreadPesan > 0)
-                      _quickBadge('$unreadPesan Pesan Baru', Icons.mail_rounded, Colors.white.withValues(alpha: 0.2)),
+                      _quickBadge('$unreadPesan Pesan Baru', Icons.mail_rounded,
+                          Colors.white.withOpacity(0.2)),
                     if (pendingTopup > 0)
-                      _quickBadge('$pendingTopup Verifikasi Top-Up', Icons.payments_rounded, const Color(0x33FFB020)),
-                    _quickBadge('3 Tagihan Jatuh Tempo', Icons.warning_amber_rounded, const Color(0x33FF3B30)),
+                      _quickBadge('$pendingTopup Verifikasi Top-Up',
+                          Icons.payments_rounded, const Color(0x33FFB020)),
+                    _quickBadge('3 Tagihan Jatuh Tempo',
+                        Icons.warning_amber_rounded, const Color(0x33FF3B30)),
                   ],
                 ),
               ],
@@ -168,10 +196,11 @@ class DashboardPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
+              color: Colors.white.withOpacity(0.12),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.mosque_rounded, size: 56, color: Colors.white),
+            child:
+                const Icon(Icons.mosque_rounded, size: 56, color: Colors.white),
           ),
         ],
       ),
@@ -184,7 +213,7 @@ class DashboardPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+        border: Border.all(color: Colors.white.withOpacity(0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -193,7 +222,9 @@ class DashboardPage extends StatelessWidget {
           const SizedBox(width: 8),
           Text(label,
               style: GoogleFonts.outfit(
-                  color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                  color: Colors.white,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -206,7 +237,11 @@ class DashboardPage extends StatelessWidget {
         children: [
           Icon(icon, size: 22, color: AppColors.textPrimary),
           const SizedBox(width: 10),
-          Text(title, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+          Text(title,
+              style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary)),
         ],
       ),
     );
@@ -217,19 +252,32 @@ class DashboardPage extends StatelessWidget {
   // ────────────────────────────────────────────────────────────
   Widget _buildPrimaryMetrics(int siswa, int guru, int absen, bool isMedium) {
     final cards = [
-      _metricCard('Santri Aktif', '$siswa', 'Orang', Icons.people_alt_rounded, AppColors.info, AppColors.infoSurface),
-      _summaryCardRich('Tenaga Pendidik', '$guru Ustadz/Ah', Icons.person_rounded, AppColors.warning),
-      _summaryCardRich('Absensi Hari Ini', '$absen Santri Hadir', Icons.fact_check_rounded, AppColors.success),
+      _metricCard('Santri Aktif', '$siswa', 'Orang', Icons.people_alt_rounded,
+          AppColors.info, AppColors.infoSurface),
+      _summaryCardRich('Tenaga Pendidik', '$guru Ustadz/Ah',
+          Icons.person_rounded, AppColors.warning),
+      _summaryCardRich('Absensi Hari Ini', '$absen Santri Hadir',
+          Icons.fact_check_rounded, AppColors.success),
     ];
 
     if (isMedium) {
-      return Row(children: cards.map((c) => Expanded(child: Padding(padding: const EdgeInsets.only(right: 16), child: c))).toList());
+      return Row(
+          children: cards
+              .map((c) => Expanded(
+                  child: Padding(
+                      padding: const EdgeInsets.only(right: 16), child: c)))
+              .toList());
     } else {
-      return Column(children: cards.map((c) => Padding(padding: const EdgeInsets.only(bottom: 12), child: c)).toList());
+      return Column(
+          children: cards
+              .map((c) =>
+                  Padding(padding: const EdgeInsets.only(bottom: 12), child: c))
+              .toList());
     }
   }
 
-  Widget _metricCard(String title, String val, String suffix, IconData icon, Color c, Color bg) {
+  Widget _metricCard(String title, String val, String suffix, IconData icon,
+      Color c, Color bg) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -241,7 +289,8 @@ class DashboardPage extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+                color: bg, borderRadius: BorderRadius.circular(12)),
             child: Icon(icon, color: c, size: 24),
           ),
           const SizedBox(width: 16),
@@ -249,16 +298,28 @@ class DashboardPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                Text(title,
+                    style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary)),
                 const SizedBox(height: 4),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(val, style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                    Text(val,
+                        style: GoogleFonts.outfit(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary)),
                     const SizedBox(width: 6),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(suffix, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMuted)),
+                      child: Text(suffix,
+                          style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textMuted)),
                     ),
                   ],
                 ),
@@ -270,36 +331,58 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _summaryCardRich(String label, String val, IconData icon, Color color) {
-    return _metricCard(label, val.split(' ')[0], val.split(' ').length > 1 ? val.split(' ')[1] : '', icon, color, color.withValues(alpha: 0.12));
+  Widget _summaryCardRich(
+      String label, String val, IconData icon, Color color) {
+    return _metricCard(
+        label,
+        val.split(' ')[0],
+        val.split(' ').length > 1 ? val.split(' ')[1] : '',
+        icon,
+        color,
+        color.withOpacity(0.12));
   }
 
   // ────────────────────────────────────────────────────────────
   // 3. Keuangan & Tagihan
   // ────────────────────────────────────────────────────────────
-  Widget _buildFinanceOverview(double total, double infaq, double operasional, bool isMedium) {
+  Widget _buildFinanceOverview(
+      double total, double infaq, double operasional, bool isMedium) {
     final cards = [
-      _financeVaultCard('Kas Keseluruhan', total, Icons.account_balance_rounded, AppColors.primary),
-      _financeVaultCard('Dana Infaq', infaq, Icons.volunteer_activism_rounded, AppColors.success),
-      _financeVaultCard('Dana Operasional', operasional, Icons.domain_rounded, AppColors.secondary),
+      _financeVaultCard('Kas Keseluruhan', total, Icons.account_balance_rounded,
+          AppColors.primary),
+      _financeVaultCard('Dana Infaq', infaq, Icons.volunteer_activism_rounded,
+          AppColors.success),
+      _financeVaultCard('Dana Operasional', operasional, Icons.domain_rounded,
+          AppColors.secondary),
     ];
     if (isMedium) {
-      return Row(children: cards.map((c) => Expanded(child: Padding(padding: const EdgeInsets.only(right: 16), child: c))).toList());
+      return Row(
+          children: cards
+              .map((c) => Expanded(
+                  child: Padding(
+                      padding: const EdgeInsets.only(right: 16), child: c)))
+              .toList());
     } else {
-      return Column(children: cards.map((c) => Padding(padding: const EdgeInsets.only(bottom: 12), child: c)).toList());
+      return Column(
+          children: cards
+              .map((c) =>
+                  Padding(padding: const EdgeInsets.only(bottom: 12), child: c))
+              .toList());
     }
   }
 
-  Widget _financeVaultCard(String title, double amount, IconData icon, Color c) {
+  Widget _financeVaultCard(
+      String title, double amount, IconData icon, Color c) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [c.withValues(alpha: 0.05), Colors.white],
-          begin: Alignment.topLeft, end: Alignment.bottomRight,
+          colors: [c.withOpacity(0.05), Colors.white],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: c.withValues(alpha: 0.2)),
+        border: Border.all(color: c.withOpacity(0.2)),
       ),
       child: Row(
         children: [
@@ -308,8 +391,16 @@ class DashboardPage extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
-              Text('Rp ${(amount / 1000000).toStringAsFixed(1)} Juta', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+              Text(title,
+                  style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textSecondary)),
+              Text('Rp ${(amount / 1000000).toStringAsFixed(1)} Juta',
+                  style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary)),
             ],
           ),
         ],
@@ -317,16 +408,50 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCards(int lunas, int belum, double pendapatan, bool isMedium) {
+  Widget _buildStatCards(
+      int lunas, int belum, double pendapatan, bool isMedium) {
     final cards = [
-      StatCard(title: 'Tagihan Berhasil', value: '$lunas', subtitle: 'Bulan April 2026', icon: Icons.check_circle_rounded, iconColor: AppColors.success, iconBg: AppColors.successSurface, trend: '80%', trendUp: true),
-      StatCard(title: 'Pendapatan Diterima', value: 'Rp ${(pendapatan / 1000).toStringAsFixed(0)}rb', subtitle: 'April 2026', icon: Icons.receipt_long_rounded, iconColor: AppColors.secondary, iconBg: AppColors.secondarySurface, trend: '+12%', trendUp: true),
-      StatCard(title: 'Menunggak', value: '$belum', subtitle: 'Perlu ditagih', icon: Icons.pending_actions_rounded, iconColor: AppColors.error, iconBg: AppColors.errorSurface, trend: '20%', trendUp: false),
+      StatCard(
+          title: 'Tagihan Berhasil',
+          value: '$lunas',
+          subtitle: 'Bulan April 2026',
+          icon: Icons.check_circle_rounded,
+          iconColor: AppColors.success,
+          iconBg: AppColors.successSurface,
+          trend: '80%',
+          trendUp: true),
+      StatCard(
+          title: 'Pendapatan Diterima',
+          value: 'Rp ${(pendapatan / 1000).toStringAsFixed(0)}rb',
+          subtitle: 'April 2026',
+          icon: Icons.receipt_long_rounded,
+          iconColor: AppColors.secondary,
+          iconBg: AppColors.secondarySurface,
+          trend: '+12%',
+          trendUp: true),
+      StatCard(
+          title: 'Menunggak',
+          value: '$belum',
+          subtitle: 'Perlu ditagih',
+          icon: Icons.pending_actions_rounded,
+          iconColor: AppColors.error,
+          iconBg: AppColors.errorSurface,
+          trend: '20%',
+          trendUp: false),
     ];
     if (isMedium) {
-      return Row(children: cards.map((c) => Expanded(child: Padding(padding: const EdgeInsets.only(right: 16), child: c))).toList());
+      return Row(
+          children: cards
+              .map((c) => Expanded(
+                  child: Padding(
+                      padding: const EdgeInsets.only(right: 16), child: c)))
+              .toList());
     } else {
-      return Column(children: cards.map((c) => Padding(padding: const EdgeInsets.only(bottom: 12), child: c)).toList());
+      return Column(
+          children: cards
+              .map((c) =>
+                  Padding(padding: const EdgeInsets.only(bottom: 12), child: c))
+              .toList());
     }
   }
 
@@ -334,12 +459,21 @@ class DashboardPage extends StatelessWidget {
   // 4. Analitik Chart
   // ────────────────────────────────────────────────────────────
   Widget _buildRevenueChart() {
-    final spots = [const FlSpot(1, 1.8), const FlSpot(2, 2.1), const FlSpot(3, 1.9), const FlSpot(4, 2.4), const FlSpot(5, 2.2), const FlSpot(6, 2.8)];
+    final spots = [
+      const FlSpot(1, 1.8),
+      const FlSpot(2, 2.1),
+      const FlSpot(3, 1.9),
+      const FlSpot(4, 2.4),
+      const FlSpot(5, 2.2),
+      const FlSpot(6, 2.8)
+    ];
     return AdminCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeader(title: 'Trend Pendapatan', subtitle: '6 Bulan Terakhir (Juta Rupiah)'),
+          const SectionHeader(
+              title: 'Trend Pendapatan',
+              subtitle: '6 Bulan Terakhir (Juta Rupiah)'),
           const SizedBox(height: 24),
           SizedBox(
             height: 200,
@@ -348,21 +482,47 @@ class DashboardPage extends StatelessWidget {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  getDrawingHorizontalLine: (_) => const FlLine(color: AppColors.surfaceVariant, strokeWidth: 1.5),
+                  getDrawingHorizontalLine: (_) => const FlLine(
+                      color: AppColors.surfaceVariant, strokeWidth: 1.5),
                 ),
                 titlesData: FlTitlesData(
                   leftTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: true, reservedSize: 32, getTitlesWidget: (v, _) => Text('${v.toStringAsFixed(1)}M', style: GoogleFonts.outfit(fontSize: 10, color: AppColors.textMuted))),
+                    sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 32,
+                        getTitlesWidget: (v, _) => Text(
+                            '${v.toStringAsFixed(1)}M',
+                            style: GoogleFonts.outfit(
+                                fontSize: 10, color: AppColors.textMuted))),
                   ),
                   bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: true, getTitlesWidget: (v, _) {
-                      const months = ['', 'Okt', 'Nov', 'Des', 'Jan', 'Feb', 'Mar'];
-                      if (v.toInt() < 1 || v.toInt() > 6) return const SizedBox();
-                      return Padding(padding: const EdgeInsets.only(top: 8), child: Text(months[v.toInt()], style: GoogleFonts.outfit(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w600)));
-                    }),
+                    sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (v, _) {
+                          const months = [
+                            '',
+                            'Okt',
+                            'Nov',
+                            'Des',
+                            'Jan',
+                            'Feb',
+                            'Mar'
+                          ];
+                          if (v.toInt() < 1 || v.toInt() > 6)
+                            return const SizedBox();
+                          return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(months[v.toInt()],
+                                  style: GoogleFonts.outfit(
+                                      fontSize: 11,
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w600)));
+                        }),
                   ),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
                 ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
@@ -375,11 +535,20 @@ class DashboardPage extends StatelessWidget {
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      gradient: LinearGradient(colors: [AppColors.primary.withValues(alpha: 0.2), AppColors.primary.withValues(alpha: 0.01)], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+                      gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withOpacity(0.2),
+                            AppColors.primary.withOpacity(0.01)
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter),
                     ),
                   ),
                 ],
-                minX: 1, maxX: 6, minY: 1.0, maxY: 3.5,
+                minX: 1,
+                maxX: 6,
+                minY: 1.0,
+                maxY: 3.5,
               ),
             ),
           ),
@@ -393,16 +562,41 @@ class DashboardPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeader(title: 'Distribusi Tagihan', subtitle: 'Bulan April 2026'),
+          const SectionHeader(
+              title: 'Distribusi Tagihan', subtitle: 'Bulan April 2026'),
           const SizedBox(height: 20),
           SizedBox(
             height: 160,
             child: PieChart(
               PieChartData(
                 sections: [
-                  PieChartSectionData(value: 5, color: AppColors.success, title: '5', radius: 55, titleStyle: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
-                  PieChartSectionData(value: 1, color: AppColors.info, title: '1', radius: 50, titleStyle: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
-                  PieChartSectionData(value: 2, color: AppColors.error, title: '2', radius: 55, titleStyle: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                  PieChartSectionData(
+                      value: 5,
+                      color: AppColors.success,
+                      title: '5',
+                      radius: 55,
+                      titleStyle: GoogleFonts.outfit(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white)),
+                  PieChartSectionData(
+                      value: 1,
+                      color: AppColors.info,
+                      title: '1',
+                      radius: 50,
+                      titleStyle: GoogleFonts.outfit(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white)),
+                  PieChartSectionData(
+                      value: 2,
+                      color: AppColors.error,
+                      title: '2',
+                      radius: 55,
+                      titleStyle: GoogleFonts.outfit(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white)),
                 ],
                 sectionsSpace: 4,
                 centerSpaceRadius: 35,
@@ -423,10 +617,20 @@ class DashboardPage extends StatelessWidget {
   Widget _legendItem(Color color, String label, String count) {
     return Row(
       children: [
-        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 8),
-        Expanded(child: Text(label, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.textSecondary))),
-        Text(count, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w700, color: color)),
+        Expanded(
+            child: Text(label,
+                style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary))),
+        Text(count,
+            style: GoogleFonts.outfit(
+                fontSize: 12, fontWeight: FontWeight.w700, color: color)),
       ],
     );
   }
@@ -445,7 +649,13 @@ class DashboardPage extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             child: SectionHeader(
               title: 'Riwayat Pembayaran Terbaru',
-              action: TextButton(onPressed: () {}, child: Text('Semua', style: GoogleFonts.outfit(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w700))),
+              action: TextButton(
+                  onPressed: () {},
+                  child: Text('Semua',
+                      style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700))),
             ),
           ),
           const Divider(height: 1, color: AppColors.border),
@@ -456,35 +666,61 @@ class DashboardPage extends StatelessWidget {
   }
 
   Widget _paymentRow(Tagihan t) {
-    Color sc, sbg; String sl;
+    Color sc, sbg;
+    String sl;
     switch (t.status) {
-      case PaymentStatus.lunas: sc = AppColors.success; sbg = AppColors.successSurface; sl = 'Lunas'; break;
-      case PaymentStatus.belumBayar: sc = AppColors.error; sbg = AppColors.errorSurface; sl = 'Belum'; break;
-      case PaymentStatus.terlambat: sc = AppColors.warning; sbg = AppColors.warningSurface; sl = 'Terlambat'; break;
-      case PaymentStatus.cicilan: sc = AppColors.info; sbg = AppColors.infoSurface; sl = 'Cicilan'; break;
+      case PaymentStatus.lunas:
+        sc = AppColors.success;
+        sbg = AppColors.successSurface;
+        sl = 'Lunas';
+        break;
+      case PaymentStatus.belumBayar:
+        sc = AppColors.error;
+        sbg = AppColors.errorSurface;
+        sl = 'Belum';
+        break;
+      case PaymentStatus.terlambat:
+        sc = AppColors.warning;
+        sbg = AppColors.warningSurface;
+        sl = 'Terlambat';
+        break;
+      case PaymentStatus.cicilan:
+        sc = AppColors.info;
+        sbg = AppColors.infoSurface;
+        sl = 'Cicilan';
+        break;
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))),
+      decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppColors.border))),
       child: Row(
         children: [
           CircleAvatar(
             radius: 18,
             backgroundColor: AppColors.primarySurface,
-            child: Text(t.siswaNama[0], style: GoogleFonts.outfit(color: AppColors.primary, fontWeight: FontWeight.w700)),
+            child: Text(t.siswaNama[0],
+                style: GoogleFonts.outfit(
+                    color: AppColors.primary, fontWeight: FontWeight.w700)),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(t.siswaNama, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600)),
-                Text('${t.jenis} · ${t.bulan}', style: GoogleFonts.outfit(fontSize: 11, color: AppColors.textMuted)),
+                Text(t.siswaNama,
+                    style: GoogleFonts.outfit(
+                        fontSize: 13, fontWeight: FontWeight.w600)),
+                Text('${t.jenis} · ${t.bulan}',
+                    style: GoogleFonts.outfit(
+                        fontSize: 11, color: AppColors.textMuted)),
               ],
             ),
           ),
-          Text('Rp ${(t.jumlah / 1000).toStringAsFixed(0)}rb', style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w700)),
+          Text('Rp ${(t.jumlah / 1000).toStringAsFixed(0)}rb',
+              style: GoogleFonts.outfit(
+                  fontSize: 13, fontWeight: FontWeight.w700)),
           const SizedBox(width: 10),
           StatusBadge(label: sl, color: sc, bgColor: sbg),
         ],
@@ -498,7 +734,9 @@ class DashboardPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(padding: EdgeInsets.all(20), child: SectionHeader(title: 'Notifikasi & Log Sistem')),
+          const Padding(
+              padding: EdgeInsets.all(20),
+              child: SectionHeader(title: 'Notifikasi & Log Sistem')),
           const Divider(height: 1, color: AppColors.border),
           ...DummyData.notifikasiList.take(5).map((n) => _notifRow(n)),
         ],
@@ -510,15 +748,18 @@ class DashboardPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: n.dibaca ? null : n.warna.withValues(alpha: 0.04),
+        color: n.dibaca ? null : n.warna.withOpacity(0.04),
         border: const Border(bottom: BorderSide(color: AppColors.border)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(color: n.warna.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+                color: n.warna.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10)),
             child: Icon(n.ikon, size: 18, color: n.warna),
           ),
           const SizedBox(width: 12),
@@ -526,11 +767,22 @@ class DashboardPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(n.judul, style: GoogleFonts.outfit(fontSize: 12, fontWeight: n.dibaca ? FontWeight.w600 : FontWeight.w700, color: AppColors.textPrimary)),
+                Text(n.judul,
+                    style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        fontWeight:
+                            n.dibaca ? FontWeight.w600 : FontWeight.w700,
+                        color: AppColors.textPrimary)),
                 const SizedBox(height: 2),
-                Text(n.isi, style: GoogleFonts.outfit(fontSize: 11, color: AppColors.textSecondary), maxLines: 2, overflow: TextOverflow.ellipsis),
+                Text(n.isi,
+                    style: GoogleFonts.outfit(
+                        fontSize: 11, color: AppColors.textSecondary),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 4),
-                Text(n.waktu, style: GoogleFonts.outfit(fontSize: 10, color: AppColors.textMuted)),
+                Text(n.waktu,
+                    style: GoogleFonts.outfit(
+                        fontSize: 10, color: AppColors.textMuted)),
               ],
             ),
           ),
